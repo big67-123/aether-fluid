@@ -98,10 +98,7 @@ class App {
     this.seedPending = 12;
 
     this.renderOnce();
-    this.probeRefresh().then(function () {
-      self.clock.last = 0;
-      self.raf = requestAnimationFrame(function (t) { self.frame(t); });
-    });
+    this.probeRefresh().then(function () { self.startLoop(); });
     this.setupPwa();
     this.maybeShowInstallHint();
     window.__AETHER__ = this;
@@ -137,6 +134,7 @@ class App {
         self.clock.last = 0;
         self.needMeasure = true;
         self.needAllocate = true;
+        self.startLoop();
       }
     });
 
@@ -195,7 +193,7 @@ class App {
     this.seedPending = 8;
     this.clock.last = 0;
     this.toast('已恢复');
-    if (!this.raf) this.raf = requestAnimationFrame(function (t) { self.frame(t); });
+    self.startLoop();
   }
 
   fail(message) {
@@ -275,10 +273,18 @@ class App {
   probeRefresh() {
     const self = this;
     return new Promise(function (resolve) {
+      let settled = false;
       const deltas = [];
       let last = 0;
       let count = 0;
+      const finish = function (period) {
+        if (settled) return;
+        settled = true;
+        self.clock.setRefreshFromPeriod(period);
+        resolve(self.clock.refreshHz);
+      };
       const step = function (now) {
+        if (settled) return;
         if (last) deltas.push(now - last);
         last = now;
         count++;
@@ -287,12 +293,23 @@ class App {
           return;
         }
         deltas.sort(function (a, b) { return a - b; });
-        const median = deltas[Math.floor(deltas.length / 2)];
-        self.clock.setRefreshFromPeriod(median);
-        resolve(self.clock.refreshHz);
+        finish(deltas[Math.floor(deltas.length / 2)]);
       };
       requestAnimationFrame(step);
+      // A page opened in a background tab never receives animation frames, so the
+      // probe would hang forever and the screen would stay frozen. Fall back to the
+      // default rate and start regardless; the loop parks itself until visible.
+      setTimeout(function () { finish(0); }, 1500);
     });
+  }
+
+  // Idempotent: safe to call from boot, from a context restore, and every time
+  // the page becomes visible again.
+  startLoop() {
+    const self = this;
+    if (this.raf || this.lost || !this.fluid) return;
+    this.clock.last = 0;
+    this.raf = requestAnimationFrame(function (t) { self.frame(t); });
   }
 
   // ------------------------------------------------------------------- loop
