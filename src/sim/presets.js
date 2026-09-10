@@ -74,13 +74,18 @@ export const PRESETS = [
     blurb: '宣纸底 + 吸光式颜料混合，涡度最高，墨水几乎不消散。',
     params: {
       curl: 36, buoyancy: 0.10, weight: 0.05, damping: 0.52, dyeFade: 0.045, heatCool: 1.6,
-      pressure: 20, order: 2, splatRadius: 0.026, splatGain: 0.13, dyeAmount: 1.15, heatAmount: 0.25,
+      pressure: 20, order: 2, splatRadius: 0.026, splatGain: 0.13, dyeAmount: 1.6, heatAmount: 0.25,
       exposure: 1.0, bloom: 0.0, bloomThreshold: 1.0, crisp: 0.6, vignette: 0.05, grain: 0.020,
       absorb: 2.8, blend: 1, tonemap: 0, gamma: 2.2,
       base: [0.930, 0.912, 0.868], baseTop: [0.878, 0.870, 0.842],
-      particles: true, particleOpacity: 0.22, particleSize: 1.6, particleSpeed: 1.0, particleLife: 4.0,
+      // Composite blending is Beer-Lambert: col = paper * exp(-dye * absorb), so in
+      // this mode `dye` is an ABSORPTION colour, not a reflected one. Blue ink
+      // absorbs orange, hence the warm hue here -- using a blue hue (the intuitive
+      // but wrong choice) absorbs blue and transmits orange, which renders as brown.
+      // Particles are additive and can only brighten, which is meaningless on paper.
+      particles: false, particleOpacity: 0.22, particleSize: 1.6, particleSpeed: 1.0, particleLife: 4.0,
       tintA: [0.25, 0.28, 0.36], tintB: [0.10, 0.12, 0.18],
-      palette: { h0: 0.55, h1: 0.68, sat: 0.62, val: 0.22 },
+      palette: { h0: 0.03, h1: 0.15, sat: 0.62, val: 0.34 },
     },
   },
   {
