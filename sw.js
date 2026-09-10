@@ -3,7 +3,7 @@
 // (a deploy is never masked by a stale cache) while the fallback keeps the app
 // fully usable offline once it has been opened at least once.
 
-const CACHE = 'aether-fluid-v3';
+const CACHE = 'aether-fluid-v4';
 
 const SHELL = [
   './',
@@ -67,7 +67,11 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith((async () => {
     try {
-      const fresh = await fetch(request);
+      // cache: "no-cache" forces a conditional request (GitHub Pages serves ETags,
+      // so an unchanged asset costs a 304 and no body). Without it the browser HTTP
+      // cache -- which Pages sets to max-age=600 -- would hand back a stale file for
+      // up to ten minutes after a deploy, on top of the copy we keep here.
+      const fresh = await fetch(request, { cache: 'no-cache' });
       if (fresh && fresh.ok && fresh.type === 'basic') {
         const cache = await caches.open(CACHE);
         cache.put(request, fresh.clone()).catch(() => {});
