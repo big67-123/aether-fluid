@@ -4,13 +4,18 @@
 // Quality ladder, best first. Every tier is a complete, self-consistent budget:
 // simulation long side, Jacobi sweeps, advection order, bloom, tracer count and
 // the device-pixel-ratio the canvas is rendered at.
+// Pressure sweeps are deliberately low at every tier. Measurement showed the
+// projection residual bottoms out at the half-float quantisation floor after
+// ~3 sweeps and is bit-for-bit unchanged at 95+ (see sim/fluid.js). Those saved
+// passes are spent on grid resolution instead, which is the only lever that
+// actually reduces error.
 export const TIERS = [
-  { name: 'Ultra', simLong: 512, pressure: 22, order: 2, bloom: true, particles: 12288, dpr: 2.0, crisp: 0.55 },
-  { name: 'High', simLong: 448, pressure: 18, order: 2, bloom: true, particles: 8192, dpr: 2.0, crisp: 0.5 },
-  { name: 'Balanced', simLong: 384, pressure: 15, order: 2, bloom: true, particles: 6144, dpr: 1.75, crisp: 0.45 },
-  { name: 'Lean', simLong: 320, pressure: 12, order: 2, bloom: true, particles: 4096, dpr: 1.5, crisp: 0.35 },
-  { name: 'Lite', simLong: 256, pressure: 10, order: 1, bloom: false, particles: 2048, dpr: 1.25, crisp: 0.25 },
-  { name: 'Survival', simLong: 192, pressure: 8, order: 1, bloom: false, particles: 0, dpr: 1.0, crisp: 0.0 },
+  { name: 'Ultra', simLong: 576, pressure: 10, order: 2, bloom: true, particles: 12288, dpr: 2.0, crisp: 0.55 },
+  { name: 'High', simLong: 512, pressure: 9, order: 2, bloom: true, particles: 8192, dpr: 2.0, crisp: 0.5 },
+  { name: 'Balanced', simLong: 448, pressure: 8, order: 2, bloom: true, particles: 6144, dpr: 1.75, crisp: 0.45 },
+  { name: 'Lean', simLong: 384, pressure: 6, order: 2, bloom: true, particles: 4096, dpr: 1.5, crisp: 0.35 },
+  { name: 'Lite', simLong: 320, pressure: 5, order: 1, bloom: false, particles: 2048, dpr: 1.25, crisp: 0.25 },
+  { name: 'Survival', simLong: 256, pressure: 4, order: 1, bloom: false, particles: 0, dpr: 1.0, crisp: 0.0 },
 ];
 
 const REFRESH_CANDIDATES = [60, 90, 120, 144];

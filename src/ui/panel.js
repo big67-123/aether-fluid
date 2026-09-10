@@ -18,6 +18,7 @@ export const GROUPS = [
       { key: 'heatCool', label: '热量流失', min: 0, max: 3, step: 0.02, digits: 2 },
       { key: 'pressureDamp', label: '压力衰减', min: 0, max: 3, step: 0.02, digits: 2 },
       { key: 'maxSpeed', label: '速度上限', min: 0.5, max: 6, step: 0.05, digits: 2 },
+
     ],
   },
   {
@@ -36,6 +37,7 @@ export const GROUPS = [
       { key: 'exposure', label: '曝光', min: 0.2, max: 3, step: 0.01, digits: 2 },
       { key: 'bloom', label: '泛光强度', min: 0, max: 2, step: 0.01, digits: 2 },
       { key: 'bloomThreshold', label: '泛光阈值', min: 0.1, max: 1.5, step: 0.01, digits: 2 },
+      { key: 'bloomSpread', label: '泛光扩散', min: 0, max: 1.2, step: 0.01, digits: 2 },
       { key: 'crisp', label: '细节锐化', min: 0, max: 1, step: 0.01, digits: 2 },
       { key: 'vignette', label: '暗角', min: 0, max: 0.8, step: 0.01, digits: 2 },
       { key: 'grain', label: '胶片颗粒', min: 0, max: 0.05, step: 0.001, digits: 3 },
@@ -61,6 +63,28 @@ export const GROUPS = [
     ],
   },
 ];
+
+// Slug -> [min, max] whitelist, derived from the very controls above so it can
+// never drift out of sync. Shared links are filtered and clamped through this
+// before anything reaches a shader uniform.
+export function parameterRanges() {
+  const ranges = {
+    blend: [0, 1],
+    tonemap: [0, 1],
+    order: [1, 2],
+    particles: [0, 1],
+  };
+  for (let g = 0; g < GROUPS.length; g++) {
+    const items = GROUPS[g].items;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (typeof item.min === 'number' && typeof item.max === 'number') {
+        ranges[item.key] = [item.min, item.max];
+      }
+    }
+  }
+  return ranges;
+}
 
 export class Panel {
   constructor(host, handlers) {
@@ -144,6 +168,7 @@ export class Panel {
         this.action('截图', 'screenshot'),
         this.action('暂停 / 继续', 'pause'),
         this.action('清屏', 'clear'),
+        this.action('复制分享链接', 'copylink'),
         this.action('体感重力', 'motion', 'chip-quiet'),
         this.action('隐藏 HUD', 'hud', 'chip-quiet'),
       ]),

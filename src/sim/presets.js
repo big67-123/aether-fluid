@@ -26,6 +26,7 @@ export function defaultParams() {
     exposure: 1.35,
     bloom: 0.85,
     bloomThreshold: 0.55,
+    bloomSpread: 0.85,
     crisp: 0.5,
     vignette: 0.30,
     grain: 0.010,

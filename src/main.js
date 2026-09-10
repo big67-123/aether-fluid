@@ -11,10 +11,14 @@ import { defaultParams, PRESETS, findPreset, hsvToRgb } from './sim/presets.js';
 import { PointerInput } from './input/pointer.js';
 import { MotionInput } from './input/motion.js';
 import { Hud } from './ui/hud.js';
-import { Panel } from './ui/panel.js';
+import { Panel, parameterRanges } from './ui/panel.js';
 import { el, clear, clamp, lerp } from './ui/dom.js';
 
 const STORAGE_KEY = 'aether-fluid/state-v1';
+// These three are owned by the quality tier, so the tier q=... already encodes
+// them and repeating them in x=... would only bloat the link.
+const TIER_DRIVEN = { pressure: 1, order: 1, crisp: 1 };
+const LINK_RANGES = parameterRanges();
 const SEED_BATCH = 8;
 const DYE_RATE = 0.6;
 const HEAT_RATE = 0.6;
@@ -91,6 +95,7 @@ class App {
     this.panel.setPreset(preset.id, preset.blurb);
     this.panel.setQuality(this.governor.tier, this.governor.locked, this.tier.name);
 
+    this.applyShare(this.readShare());
     this.attachEvents();
     this.needMeasure = true;
     this.needAllocate = true;
@@ -526,6 +531,8 @@ class App {
       this.toast(this.paused ? '已暂停' : '继续');
     } else if (name === 'motion') {
       this.toggleMotion();
+    } else if (name === 'copylink') {
+      this.copyShareLink();
     } else if (name === 'hud') {
       this.hudVisible = !this.hudVisible;
       this.hud.setVisible(this.hudVisible);
@@ -619,12 +626,126 @@ class App {
     host.hidden = false;
   }
 
+  // ------------------------------------------------------------ share links
+  //
+  // The address bar is the persistence format:
+  //   ?p=<preset>&q=<tier index | a for auto>&x=key:value,key:value
+  // Only values that differ from the preset are emitted. Every incoming value is
+  // whitelisted by key and clamped to the range of its own control before it can
+  // reach a uniform, so a hand-edited link can never inject a wild number.
+
+  readShare() {
+    let search = '';
+    try { search = window.location.search || ''; } catch (err) { search = ''; }
+    if (!search || search.length < 2) return null;
+    let query = null;
+    try { query = new URLSearchParams(search); } catch (err) { return null; }
+    const share = { preset: null, tier: null, locked: false, params: {} };
+
+    const preset = query.get('p');
+    if (preset && findPreset(preset).id === preset) share.preset = preset;
+
+    const tier = query.get('q');
+    if (tier !== null) {
+      if (tier === 'a') {
+        share.locked = false;
+      } else {
+        const index = parseInt(tier, 10);
+        if (isFinite(index)) {
+          share.locked = true;
+          share.tier = clamp(index, 0, TIERS.length - 1);
+        }
+      }
+    }
+
+    const packed = query.get('x');
+    if (packed) {
+      const specs = packed.split(',');
+      for (let i = 0; i < specs.length; i++) {
+        const bits = specs[i].split(':');
+        if (bits.length !== 2) continue;
+        const key = bits[0];
+        const range = LINK_RANGES[key];
+        if (!range) continue;
+        const value = Number(bits[1]);
+        if (!isFinite(value)) continue;
+        share.params[key] = clamp(value, range[0], range[1]);
+      }
+    }
+    return share;
+  }
+
+  applyShare(share) {
+    if (!share) return;
+    if (share.preset && share.preset !== this.currentPreset) this.applyPreset(share.preset);
+    const keys = Object.keys(share.params);
+    for (let i = 0; i < keys.length; i++) this.params[keys[i]] = share.params[keys[i]];
+    if (share.locked) {
+      this.governor.lock(share.tier);
+      this.applyTier(share.tier);
+    } else {
+      this.governor.unlock();
+    }
+    this.panel.sync(this.params);
+    this.seedPending = 12;
+    this.toast('已载入分享的配置');
+  }
+
+  buildShareUrl() {
+    const preset = findPreset(this.currentPreset);
+    const baseline = defaultParams();
+    Object.assign(baseline, preset.params);
+    const diffs = [];
+    const keys = Object.keys(LINK_RANGES);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      if (TIER_DRIVEN[key]) continue;
+      const value = this.params[key];
+      const base = baseline[key];
+      if (typeof value === 'boolean') {
+        if (value !== !!base) diffs.push(key + ':' + (value ? 1 : 0));
+      } else if (typeof value === 'number' && isFinite(value)) {
+        if (typeof base === 'number' && Math.abs(value - base) < 1e-6) continue;
+        diffs.push(key + ':' + (Math.round(value * 1000) / 1000));
+      }
+    }
+    const query = new URLSearchParams();
+    query.set('p', preset.id);
+    query.set('q', this.governor.locked ? String(this.governor.tier) : 'a');
+    if (diffs.length) query.set('x', diffs.join(','));
+    let base = '';
+    try { base = window.location.origin + window.location.pathname; } catch (err) { base = ''; }
+    return base + '?' + query.toString();
+  }
+
+  syncUrl() {
+    try { window.history.replaceState(null, '', this.buildShareUrl()); } catch (err) { /* file:// or cross-origin */ }
+  }
+
+  copyShareLink() {
+    const self = this;
+    const url = this.buildShareUrl();
+    this.syncUrl();
+    const fallback = function () { self.toast('链接已写入地址栏，可长按复制'); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () {
+          self.toast('分享链接已复制到剪贴板');
+        }).catch(fallback);
+      } else {
+        fallback();
+      }
+    } catch (err) {
+      fallback();
+    }
+  }
+
   // ------------------------------------------------------------ persistence
 
   saveSoon() {
     const self = this;
     clearTimeout(this.saveTimer);
-    this.saveTimer = setTimeout(function () { self.save(); }, 400);
+    this.saveTimer = setTimeout(function () { self.save(); self.syncUrl(); }, 400);
   }
 
   save() {

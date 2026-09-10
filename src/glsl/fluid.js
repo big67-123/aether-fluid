@@ -36,7 +36,6 @@ void main() {
 }
 `;
 
-
 // ---------------------------------------------------------------------------
 // Advection. uOrder == 1 -> semi-Lagrangian (1 tap), uOrder == 2 -> MacCormack
 // (7 taps) with a min/max limiter that keeps the field free of new extrema.
@@ -75,7 +74,6 @@ void main() {
 }
 `;
 
-
 // Vorticity magnitude (z-component of curl) of the velocity field.
 export const CURL = `uniform sampler2D uVelocity;
 uniform vec2 uTexel;
@@ -87,7 +85,6 @@ void main() {
   outColor = vec4(0.5 * ((r - l) - (t - b)), 0.0, 0.0, 1.0);
 }
 `;
-
 
 // Vorticity confinement: re-injects energy lost to numerical diffusion.
 export const VORTICITY = `uniform sampler2D uVelocity;
@@ -110,7 +107,6 @@ void main() {
 }
 `;
 
-
 export const DIVERGENCE = `uniform sampler2D uVelocity;
 uniform vec2 uTexel;
 void main() {
@@ -121,7 +117,6 @@ void main() {
   outColor = vec4(0.5 * ((r - l) + (t - b)), 0.0, 0.0, 1.0);
 }
 `;
-
 
 // One Jacobi sweep of the Poisson problem Laplacian(p) = divergence(u).
 export const JACOBI = `uniform sampler2D uPressure;
@@ -136,7 +131,6 @@ void main() {
   outColor = vec4((l + r + b + t - div) * 0.25, 0.0, 0.0, 1.0);
 }
 `;
-
 
 // Projection step: subtract the pressure gradient, then enforce the walls.
 export const GRADIENT = `uniform sampler2D uVelocity;
@@ -155,7 +149,6 @@ void main() {
   outColor = vec4(vel, 0.0, 1.0);
 }
 `;
-
 
 // Thermal buoyancy, dye weight, device gravity and the idle auto-stir field.
 export const BODY_FORCES = `uniform sampler2D uVelocity;
@@ -187,7 +180,6 @@ void main() {
 }
 `;
 
-
 // Generic multiply / copy-with-resample used for pressure warm-start damping
 // and for preserving state across adaptive-resolution changes.
 export const SCALE = `uniform sampler2D uSource;
@@ -196,7 +188,6 @@ void main() {
   outColor = texture(uSource, vUv) * uScale;
 }
 `;
-
 
 export const SPLAT_MAX = 10;
 
@@ -211,3 +202,4 @@ export function jacobiShader() { return frag(JACOBI); }
 export function gradientShader() { return frag(GRADIENT); }
 export function bodyForcesShader() { return frag(BODY_FORCES); }
 export function scaleShader() { return frag(SCALE); }
+
