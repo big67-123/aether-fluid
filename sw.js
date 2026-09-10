@@ -28,6 +28,7 @@ const SHELL = [
   './src/ui/dom.js',
   './src/ui/hud.js',
   './src/ui/panel.js',
+  './icons/favicon-64.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-192.png',
