@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Aether Fluid · 手写 WebGL2 物理流体</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="零第三方库、纯手写 GLSL 的不可压缩 Navier-Stokes 流体模拟器。MacCormack 平流、涡度约束、GPU 压力投影、transform feedback 示踪粒子、自适应 120Hz。">
+<meta name="theme-color" content="#05070d">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aether Fluid">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no,email=no,address=no">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+<canvas id="stage" aria-label="流体画布"></canvas>
+<div id="hud" class="hud"></div>
+<aside id="dock" class="dock" aria-label="控制面板"></aside>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="shot" class="shot" hidden></div>
+<div id="install" class="install" hidden></div>
+<div id="fatal" class="fatal" hidden></div>
+<noscript><div class="fatal"><div class="fatal-card"><h2>需要 JavaScript</h2><p>这套模拟器的全部计算都在 GPU 上通过 WebGL2 完成，必须启用 JavaScript。</p></div></div></noscript>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

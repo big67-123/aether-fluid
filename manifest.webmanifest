@@ -1,0 +1,23 @@
+{
+  "name": "Aether Fluid — 手写 WebGL2 物理流体",
+  "short_name": "Aether Fluid",
+  "description": "零第三方库、纯手写 GLSL 的不可压缩流体模拟器：MacCormack 平流、涡度约束、GPU 压力投影、transform feedback 示踪粒子、自适应 120Hz。",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#05070d",
+  "theme_color": "#05070d",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["graphics", "entertainment", "education"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

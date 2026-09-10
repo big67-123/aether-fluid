@@ -1,0 +1,11 @@
+{
+  "name": "aether-fluid",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "手写 WebGL2 着色器的物理流体模拟器 PWA（零第三方渲染库）",
+  "scripts": {
+    "icons": "node tools/make-icons.mjs"
+  },
+  "engines": { "node": ">=18" }
+}
